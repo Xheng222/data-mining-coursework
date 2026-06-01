@@ -1,5 +1,7 @@
 """契约层的基本单元测试（foundation 自带，保证 import 与公式正确）。"""
 
+import pytest
+
 from src.contracts import (
     DEFECT_TYPES,
     empty_report,
@@ -9,7 +11,7 @@ from src.contracts import (
 
 
 def test_recovery_rate_basic():
-    assert recovery_rate(0.6, 0.8, 1.0) == 0.5
+    assert recovery_rate(0.6, 0.8, 1.0) == pytest.approx(0.5)
     assert recovery_rate(0.7, 0.7, 0.7) == 0.0  # 分母为 0 时安全返回
 
 

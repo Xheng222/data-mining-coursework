@@ -59,11 +59,20 @@ def test_all_files_exist(bundle):
 
 
 def test_bundle_metadata(bundle):
-    """DatasetBundle 标量字段应回传调用参数。"""
+    """DatasetBundle 标量字段：id/difficulty 回传参数；n_rows/n_features 反映脏训练集实际规模。
+
+    注：注入近似重复会增行、类别不平衡欠采样会减行，因此 n_rows 不等于入参 N_ROWS，
+    而应与落盘的 dirty_train 行数一致；n_features 同理对应脏训练集的特征列数。
+    """
+    import pandas as pd
+
     assert bundle.dataset_id == "t"
     assert bundle.difficulty == "easy"
-    assert bundle.n_rows == N_ROWS
-    assert bundle.n_features == N_FEATURES
+
+    dirty = pd.read_csv(bundle.dirty_train)
+    assert bundle.n_rows == len(dirty)
+    assert bundle.n_features == dirty.shape[1] - 1  # 去掉 target 列
+    assert bundle.n_rows > 0 and bundle.n_features > 0
 
 
 def test_ground_truth_schema(bundle):
