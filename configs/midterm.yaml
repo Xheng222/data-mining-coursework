@@ -1,4 +1,4 @@
-# 中期实验配置：在合成数据上对比 no_clean / rule_based / agent，并跑 Reviewer 消融。
+# 中期实验配置：在合成数据上对比 no_clean / rule_based / agent，并围绕 agent_full 跑 Reviewer 与 Planner 消融。
 datasets:
   - id: synth_easy
     difficulty: easy
@@ -17,15 +17,19 @@ methods:
   - rule_based
   - agent
 
-# Agent 消融（中期至少跑通 reviewer on/off 一组）
+# Agent 消融：以 agent_full 为基准，分别关掉 Reviewer / Planner，隔离单个维度的贡献
 ablations:
   - name: agent_full
     use_planner: true
     use_reviewer: true
     prompt_strategy: cot
-  - name: agent_no_reviewer
+  - name: agent_no_reviewer    # 隔离 Reviewer（反思）维度
     use_planner: true
     use_reviewer: false
+    prompt_strategy: cot
+  - name: agent_no_planner     # 隔离 Planner（规划）维度
+    use_planner: false
+    use_reviewer: true
     prompt_strategy: cot
 
 model: deepseek-chat
