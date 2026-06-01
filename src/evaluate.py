@@ -11,13 +11,14 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pandas as pd
 from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
 
-from src.contracts import DefectReport, DetectionScore
+from src.contracts import DEFECT_TYPES, DefectReport, DetectionScore
 
 
 def train_and_auc(
@@ -97,10 +98,61 @@ def train_and_auc(
         return 0.5
 
 
+def _prf(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
+    """由 tp/fp/fn 计算 precision/recall/f1。
+
+    空集合约定：当 tp+fp == 0（什么都没报告）时 precision = 1.0；
+    当 tp+fn == 0（该类型本无缺陷）时 recall = 1.0。
+    因此「truth 空且 reported 空」会得到 P=R=F1=1.0（正确地什么都没报）。
+    """
+    precision = tp / (tp + fp) if (tp + fp) > 0 else 1.0
+    recall = tp / (tp + fn) if (tp + fn) > 0 else 1.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) > 0 else 0.0
+    return precision, recall, f1
+
+
 def detection_scores(reported: DefectReport, ground_truth: DefectReport) -> DetectionScore:
-    """按 contracts 的 items 集合，分缺陷类型计算 P/R/F1 并 micro 平均。"""
-    raise NotImplementedError
+    """按 contracts 的 items 集合，分缺陷类型计算 P/R/F1 并 micro 平均。
+
+    对每个 ``DEFECT_TYPES`` 中的类型 t，取 ``reported[t]["items"]`` 与
+    ``ground_truth[t]["items"]`` 两个集合，计算：
+      - tp = 交集大小、fp = reported 独有、fn = truth 独有。
+    per-type 用上述集合各自算 P/R/F1（空集合约定见 ``_prf``）。
+    整体用 **micro 平均**：累加所有类型的 tp/fp/fn 后统一算 P/R/F1。
+
+    ``reported`` / ``ground_truth`` 可能缺某些 type 键，用
+    ``.get(t, {}).get("items", [])`` 兜底为空集合。
+    """
+    per_type: dict[str, dict[str, float]] = {}
+    total_tp = total_fp = total_fn = 0
+
+    for t in DEFECT_TYPES:
+        rep_items = set(reported.get(t, {}).get("items", []) or [])
+        gt_items = set(ground_truth.get(t, {}).get("items", []) or [])
+
+        tp = len(rep_items & gt_items)
+        fp = len(rep_items - gt_items)
+        fn = len(gt_items - rep_items)
+
+        precision, recall, f1 = _prf(tp, fp, fn)
+        per_type[t] = {
+            "precision": precision,
+            "recall": recall,
+            "f1": f1,
+            "tp": tp,
+            "fp": fp,
+            "fn": fn,
+        }
+
+        total_tp += tp
+        total_fp += fp
+        total_fn += fn
+
+    precision, recall, f1 = _prf(total_tp, total_fp, total_fn)
+    return DetectionScore(precision=precision, recall=recall, f1=f1, per_type=per_type)
 
 
 def load_ground_truth(path: str | Path) -> DefectReport:
-    raise NotImplementedError
+    """从 JSON 文件读取 ground-truth 缺陷报告，返回 DefectReport（dict）。"""
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
