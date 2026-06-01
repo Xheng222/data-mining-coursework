@@ -1,7 +1,27 @@
 [project]
 name = "data-mining-coursework"
 version = "0.1.0"
-description = "Add your description here"
+description = "脏数据基准：评估 LLM Data Agent 的缺陷检测与修复能力"
 readme = "README.md"
-requires-python = ">=3.9"
-dependencies = []
+requires-python = ">=3.13"
+dependencies = [
+    "pandas>=2.2",
+    "numpy>=1.26",
+    "scikit-learn>=1.5",
+    "xgboost>=2.1",
+    "lightgbm>=4.5",
+    "pyyaml>=6.0",
+    "matplotlib>=3.9",
+    "python-dotenv>=1.0",
+    "langgraph>=0.2",
+    "langchain-openai>=0.2",
+    "langchain-core>=0.3",
+]
+
+[project.optional-dependencies]
+profiling = ["ydata-profiling>=4.10"]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

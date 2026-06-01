@@ -1,0 +1,32 @@
+# 中期实验配置：在合成数据上对比 no_clean / rule_based / agent，并跑 Reviewer 消融。
+datasets:
+  - id: synth_easy
+    difficulty: easy
+    seed: 42
+  - id: synth_medium
+    difficulty: medium
+    seed: 7
+
+base:
+  n_rows: 10000
+  n_features: 30
+  test_size: 0.2          # 冻结的干净测试集比例
+
+methods:
+  - no_clean
+  - rule_based
+  - agent
+
+# Agent 消融（中期至少跑通 reviewer on/off 一组）
+ablations:
+  - name: agent_full
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: cot
+  - name: agent_no_reviewer
+    use_planner: true
+    use_reviewer: false
+    prompt_strategy: cot
+
+model: deepseek-chat
+out_dir: results
