@@ -205,3 +205,7 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# 可由 src.run_experiments 重新生成的数据（不入库，保留 .gitkeep 占位）
+data/synthetic/*/
+data/processed/*.csv
