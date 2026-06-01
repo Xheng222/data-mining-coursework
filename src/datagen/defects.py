@@ -270,14 +270,22 @@ def inject_class_imbalance(
 
 
 # 用于注入格式不一致时的若干变换器：把一个数值改写成不一致格式的字符串。
+# 关键约束：所有变体的输出都必须是**无法直接解析回数字**的字符串，否则
+# 落盘并重新读取 CSV 时 pandas 会把整列解析回数值 dtype，缺陷就消失了。
+# 基座特征数值通常较小（约 [-5, 5]），因此仅靠千分位分组并不可靠，
+# 必须显式引入逗号小数点 / 单位后缀 / 货币前缀 / 多余空白等非数字标记。
 def _to_thousands(v: float) -> str:
-    """千分位写法，如 1234.0 -> "1,234"。"""
-    return f"{int(round(v)):,}"
+    """千分位 + 两位小数，并以逗号作小数点，如 1234.5 -> "1,234,50"。
+
+    始终包含逗号小数点，保证小数值（如 0.5 -> "0,50"）也不会被解析回数字。
+    """
+    s = f"{v:,.2f}"          # 例如 "1,234.50" 或 "0.50"
+    return s.replace(".", ",")  # -> "1,234,50" / "0,50"，含逗号，非数字
 
 
 def _to_unit(v: float) -> str:
-    """带单位写法，如 12.3 -> "12kg"。"""
-    return f"{int(round(v))}kg"
+    """带单位后缀写法，如 12.3 -> "12.30kg"。"""
+    return f"{v:.2f}kg"
 
 
 def _to_comma_decimal(v: float) -> str:
@@ -285,12 +293,17 @@ def _to_comma_decimal(v: float) -> str:
     return f"{v:.2f}".replace(".", ",")
 
 
+def _to_currency(v: float) -> str:
+    """货币前缀写法，如 12.3 -> "$12.30"。"""
+    return f"${v:.2f}"
+
+
 def _to_padded(v: float) -> str:
-    """带多余空白的写法，如 12.3 -> "  12.30 "。"""
-    return f"  {v:.2f} "
+    """带多余空白与单位的写法，如 12.3 -> "  12.30 units "。"""
+    return f"  {v:.2f} units "
 
 
-_FORMAT_VARIANTS = (_to_thousands, _to_unit, _to_comma_decimal, _to_padded)
+_FORMAT_VARIANTS = (_to_thousands, _to_unit, _to_comma_decimal, _to_currency, _to_padded)
 
 
 def inject_format_inconsistency(
