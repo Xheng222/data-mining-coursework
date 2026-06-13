@@ -1,0 +1,53 @@
+# 最终实验配置：合成数据（easy / medium）+ CleanML 真实数据集（Credit / EEG / Marketing）
+datasets:
+  # --- 合成数据（共 2 个）---
+  - id: synth_easy
+    difficulty: easy
+    seed: 42
+  - id: synth_medium
+    difficulty: medium
+    seed: 7
+
+  # --- CleanML 真实数据（共 3 个）---
+  - id: Credit
+    source: cleanml
+  - id: EEG
+    source: cleanml
+  - id: Marketing
+    source: cleanml
+
+base:
+  n_rows: 10000
+  n_features: 30
+  test_size: 0.2
+
+methods:
+  - no_clean
+  - rule_based
+  - agent
+
+# Agent 消融：Planner × Reviewer 正交 + Prompt 策略对比
+ablations:
+  - name: agent_full
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: cot
+  - name: agent_no_reviewer
+    use_planner: true
+    use_reviewer: false
+    prompt_strategy: cot
+  - name: agent_no_planner
+    use_planner: false
+    use_reviewer: true
+    prompt_strategy: cot
+  - name: agent_zero_shot
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: zero_shot
+  - name: agent_few_shot
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: few_shot
+
+model: deepseek-chat
+out_dir: results
