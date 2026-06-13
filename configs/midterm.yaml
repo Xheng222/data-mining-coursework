@@ -19,6 +19,7 @@ methods:
 
 # Agent 消融：以 agent_full 为基准，分别关掉 Reviewer / Planner，隔离单个维度的贡献
 ablations:
+  # Planner × Reviewer 正交消融（固定 cot 策略）
   - name: agent_full
     use_planner: true
     use_reviewer: true
@@ -31,6 +32,16 @@ ablations:
     use_planner: false
     use_reviewer: true
     prompt_strategy: cot
+
+  # Prompt 策略消融（固定 planner + reviewer，对比 zero_shot / few_shot / cot）
+  - name: agent_zero_shot
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: zero_shot
+  - name: agent_few_shot
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: few_shot
 
 model: deepseek-chat
 out_dir: results
