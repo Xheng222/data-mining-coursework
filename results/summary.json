@@ -1,5 +1,5 @@
 {
-  "n_outcomes": 16,
+  "n_outcomes": 40,
   "results": [
     {
       "dataset_id": "synth_easy",
@@ -146,7 +146,9 @@
           "[planner] 生成 6 步清洗计划。",
           "[executor] 删除疑似泄漏列：['leak_0']",
           "[executor] 填补缺失列：['f9', 'f13', 'f15']",
+          "[executor] 去重：5734 -> 5734 行，报告 0 对。",
           "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
           "[reviewer] 第 1 轮：needs_revision=True。",
           "[executor] 删除疑似泄漏列：['leak_0']",
           "[executor] 填补缺失列：['f9', 'f13', 'f15']",
@@ -166,8 +168,8 @@
       "recovery_rate": 0.9946590355426997,
       "detection": {
         "precision": 1.0,
-        "recall": 0.18518518518518517,
-        "f1": 0.3125,
+        "recall": 0.2222222222222222,
+        "f1": 0.3636363636363636,
         "per_type": {
           "leakage": {
             "precision": 1.0,
@@ -203,11 +205,11 @@
           },
           "class_imbalance": {
             "precision": 1.0,
-            "recall": 0.0,
-            "f1": 0.0,
-            "tp": 0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 1,
             "fp": 0,
-            "fn": 1
+            "fn": 0
           },
           "format_inconsistency": {
             "precision": 1.0,
@@ -227,6 +229,7 @@
           "[executor] 删除疑似泄漏列：['leak_0']",
           "[executor] 填补缺失列：['f9', 'f13', 'f15']",
           "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
           "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\synth_easy_agent.csv（5734 行 x 31 列）。"
         ]
       }
@@ -297,7 +300,7 @@
           "[run_agent] 画像：缺失列 3，重复行 0，疑似泄漏 []，不平衡比 2.223。",
           "[executor] 删除疑似泄漏列：['leak_0']",
           "[executor] 填补缺失列：['f9', 'f13', 'f15']",
-          "[executor] 去重：5734 -> 5734 行，报告 0 对。",
+          "[executor] 去重：5734 -> 5734 行，报告 16 对。",
           "[executor] 报告：检测到标签噪声。",
           "[reviewer] 第 1 轮：needs_revision=True。",
           "[executor] 删除疑似泄漏列：['leak_0']",
@@ -397,9 +400,9 @@
       "auc": 0.9900629999999999,
       "recovery_rate": 0.9946590355426997,
       "detection": {
-        "precision": 0.30434782608695654,
+        "precision": 1.0,
         "recall": 0.25925925925925924,
-        "f1": 0.27999999999999997,
+        "f1": 0.4117647058823529,
         "per_type": {
           "leakage": {
             "precision": 1.0,
@@ -426,11 +429,11 @@
             "fn": 0
           },
           "near_duplicate": {
-            "precision": 0.0,
+            "precision": 1.0,
             "recall": 0.0,
             "f1": 0.0,
             "tp": 0,
-            "fp": 16,
+            "fp": 0,
             "fn": 20
           },
           "class_imbalance": {
@@ -456,20 +459,13 @@
           "[run_agent] 数据集 synth_easy：5734 行 x 32 列；config(planner=True, reviewer=True, prompt=few_shot, model=deepseek-chat)。",
           "[run_agent] 画像：缺失列 3，重复行 0，疑似泄漏 []，不平衡比 2.223。",
           "[planner] 生成 6 步清洗计划。",
+          "[executor] 统一格式列：['f6']",
           "[executor] 删除疑似泄漏列：['leak_0']",
           "[executor] 填补缺失列：['f9', 'f13', 'f15']",
           "[executor] 去重：5734 -> 5734 行，报告 0 对。",
           "[executor] 报告：检测到标签噪声。",
           "[executor] 报告：检测到类别不平衡。",
-          "[reviewer] 第 1 轮：needs_revision=True。",
-          "[executor] 统一格式列：['f6']",
-          "[executor] 删除疑似泄漏列：['leak_0']",
-          "[executor] 填补缺失列：['f9', 'f13', 'f15']",
-          "[executor] 去重：5734 -> 5734 行，报告 16 对。",
-          "[executor] 报告：检测到标签噪声。",
-          "[executor] 报告：检测到类别不平衡。",
-          "[reviewer] 第 2 轮：needs_revision=True。",
-          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reviewer] 第 1 轮：needs_revision=False。",
           "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\synth_easy_agent.csv（5734 行 x 31 列）。"
         ]
       }
@@ -559,8 +555,8 @@
       "recovery_rate": 0.9676825169575123,
       "detection": {
         "precision": 1.0,
-        "recall": 0.5483870967741935,
-        "f1": 0.7083333333333333,
+        "recall": 0.16129032258064516,
+        "f1": 0.27777777777777773,
         "per_type": {
           "leakage": {
             "precision": 1.0,
@@ -588,11 +584,11 @@
           },
           "near_duplicate": {
             "precision": 1.0,
-            "recall": 0.48,
-            "f1": 0.6486486486486487,
-            "tp": 24,
+            "recall": 0.0,
+            "f1": 0.0,
+            "tp": 0,
             "fp": 0,
-            "fn": 26
+            "fn": 50
           },
           "class_imbalance": {
             "precision": 1.0,
@@ -620,10 +616,18 @@
           "[executor] 统一格式列：['f16']",
           "[executor] 删除疑似泄漏列：['leak_0', 'leak_1']",
           "[executor] 填补缺失列：['f2', 'f9', 'f13', 'f15', 'f19']",
-          "[executor] 去重：4756 -> 4756 行，报告 24 对。",
+          "[executor] 去重：4756 -> 4756 行，报告 0 对。",
           "[executor] 报告：检测到标签噪声。",
           "[executor] 报告：检测到类别不平衡。",
-          "[reviewer] 第 1 轮：needs_revision=False。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 统一格式列：['f16']",
+          "[executor] 删除疑似泄漏列：['leak_0', 'leak_1']",
+          "[executor] 填补缺失列：['f2', 'f9', 'f13', 'f15', 'f19']",
+          "[executor] 去重：4756 -> 4756 行，报告 0 对。",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
           "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\synth_medium_agent.csv（4756 行 x 31 列）。"
         ]
       }
@@ -696,7 +700,6 @@
           "[executor] 统一格式列：['f16']",
           "[executor] 删除疑似泄漏列：['leak_0', 'leak_1']",
           "[executor] 填补缺失列：['f2', 'f9', 'f13', 'f15', 'f19']",
-          "[executor] 去重：4756 -> 4756 行，报告 0 对。",
           "[executor] 报告：检测到标签噪声。",
           "[executor] 报告：检测到类别不平衡。",
           "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\synth_medium_agent.csv（4756 行 x 31 列）。"
@@ -770,12 +773,14 @@
           "[executor] 统一格式列：['f16']",
           "[executor] 删除疑似泄漏列：['leak_0', 'leak_1']",
           "[executor] 填补缺失列：['f2', 'f9', 'f13', 'f15', 'f19']",
+          "[executor] 去重：4756 -> 4756 行，报告 0 对。",
           "[executor] 报告：检测到标签噪声。",
           "[executor] 报告：检测到类别不平衡。",
           "[reviewer] 第 1 轮：needs_revision=True。",
           "[executor] 统一格式列：['f16']",
           "[executor] 删除疑似泄漏列：['leak_0', 'leak_1']",
           "[executor] 填补缺失列：['f2', 'f9', 'f13', 'f15', 'f19']",
+          "[executor] 去重：4756 -> 4756 行，报告 0 对。",
           "[executor] 报告：检测到标签噪声。",
           "[executor] 报告：检测到类别不平衡。",
           "[reviewer] 第 2 轮：needs_revision=True。",
@@ -948,6 +953,1362 @@
           "[reviewer] 第 2 轮：needs_revision=False。",
           "[reviewer] 已达最大审视轮数，停止修订。",
           "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\synth_medium_agent.csv（4756 行 x 31 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "clean_upper",
+      "auc": 0.8656097022894332,
+      "recovery_rate": null,
+      "detection": null,
+      "extra": {}
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "no_clean",
+      "auc": 0.8656097022894332,
+      "recovery_rate": null,
+      "detection": null,
+      "extra": {}
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "rule_based",
+      "auc": 0.8618966487677837,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 2,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 366,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {}
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "agent_full",
+      "auc": 0.8640279444287035,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 2,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Credit：105000 行 x 11 列；config(planner=True, reviewer=True, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 2，重复行 366，疑似泄漏 []，不平衡比 13.919。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Credit_agent.csv（105000 行 x 11 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "agent_no_reviewer",
+      "auc": 0.8640279444287035,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 2,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Credit：105000 行 x 11 列；config(planner=True, reviewer=False, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 2，重复行 366，疑似泄漏 []，不平衡比 13.919。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Credit_agent.csv（105000 行 x 11 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "agent_no_planner",
+      "auc": 0.8635784808280059,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 2,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 50,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Credit：105000 行 x 11 列；config(planner=False, reviewer=True, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 2，重复行 366，疑似泄漏 []，不平衡比 13.919。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 去重：105000 -> 104498 行，报告 50 对。",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Credit_agent.csv（104498 行 x 11 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "agent_zero_shot",
+      "auc": 0.8635784808280059,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 2,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Credit：105000 行 x 11 列；config(planner=True, reviewer=True, prompt=zero_shot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 2，重复行 366，疑似泄漏 []，不平衡比 13.919。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 去重：105000 -> 104498 行，报告 1 对。",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 去重：105000 -> 104498 行，报告 0 对。",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Credit_agent.csv（104498 行 x 11 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Credit",
+      "method": "agent_few_shot",
+      "auc": 0.8635784808280059,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 2,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Credit：105000 行 x 11 列；config(planner=True, reviewer=True, prompt=few_shot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 2，重复行 366，疑似泄漏 []，不平衡比 13.919。",
+          "[planner] 生成 8 步清洗计划。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 去重：105000 -> 104498 行，报告 50 对。",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['MonthlyIncome', 'NumberOfDependents']",
+          "[executor] 去重：105000 -> 104498 行，报告 1 对。",
+          "[executor] 报告：检测到标签噪声。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Credit_agent.csv（104498 行 x 11 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "clean_upper",
+      "auc": 0.9558817140906694,
+      "recovery_rate": null,
+      "detection": null,
+      "extra": {}
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "no_clean",
+      "auc": 0.9558817140906694,
+      "recovery_rate": null,
+      "detection": null,
+      "extra": {}
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "rule_based",
+      "auc": 0.9558817140906694,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {}
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "agent_full",
+      "auc": 0.9558817140906694,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 EEG：10486 行 x 15 列；config(planner=True, reviewer=True, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 0，重复行 0，疑似泄漏 []，不平衡比 1.227。",
+          "[planner] 生成 6 步清洗计划。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\EEG_agent.csv（10486 行 x 15 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "agent_no_reviewer",
+      "auc": 0.9558817140906694,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 EEG：10486 行 x 15 列；config(planner=True, reviewer=False, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 0，重复行 0，疑似泄漏 []，不平衡比 1.227。",
+          "[planner] 生成 6 步清洗计划。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\EEG_agent.csv（10486 行 x 15 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "agent_no_planner",
+      "auc": 0.9558817140906694,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 EEG：10486 行 x 15 列；config(planner=False, reviewer=True, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 0，重复行 0，疑似泄漏 []，不平衡比 1.227。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 去重：10486 -> 10486 行，报告 0 对。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\EEG_agent.csv（10486 行 x 15 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "agent_zero_shot",
+      "auc": 0.9558817140906694,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 EEG：10486 行 x 15 列；config(planner=True, reviewer=True, prompt=zero_shot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 0，重复行 0，疑似泄漏 []，不平衡比 1.227。",
+          "[planner] 生成 6 步清洗计划。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\EEG_agent.csv（10486 行 x 15 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "EEG",
+      "method": "agent_few_shot",
+      "auc": 0.9558817140906694,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 EEG：10486 行 x 15 列；config(planner=True, reviewer=True, prompt=few_shot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 0，重复行 0，疑似泄漏 []，不平衡比 1.227。",
+          "[planner] 生成 7 步清洗计划。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\EEG_agent.csv（10486 行 x 15 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "clean_upper",
+      "auc": 0.5,
+      "recovery_rate": null,
+      "detection": null,
+      "extra": {}
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "no_clean",
+      "auc": 0.5,
+      "recovery_rate": null,
+      "detection": null,
+      "extra": {}
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "rule_based",
+      "auc": 0.5,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 10,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 965,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {}
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "agent_full",
+      "auc": 0.5,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 10,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Marketing：8993 行 x 14 列；config(planner=True, reviewer=True, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 10，重复行 668，疑似泄漏 []，不平衡比 2.616。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 0 对。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 0 对。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Marketing_agent.csv（7127 行 x 14 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "agent_no_reviewer",
+      "auc": 0.5,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 10,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Marketing：8993 行 x 14 列；config(planner=True, reviewer=False, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 10，重复行 668，疑似泄漏 []，不平衡比 2.616。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Marketing_agent.csv（8993 行 x 14 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "agent_no_planner",
+      "auc": 0.5,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 10,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Marketing：8993 行 x 14 列；config(planner=False, reviewer=True, prompt=cot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 10，重复行 668，疑似泄漏 []，不平衡比 2.616。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 0 对。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Marketing_agent.csv（7127 行 x 14 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "agent_zero_shot",
+      "auc": 0.5,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 10,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Marketing：8993 行 x 14 列；config(planner=True, reviewer=True, prompt=zero_shot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 10，重复行 668，疑似泄漏 []，不平衡比 2.616。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 0 对。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 0 对。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Marketing_agent.csv（7127 行 x 14 列）。"
+        ]
+      }
+    },
+    {
+      "dataset_id": "Marketing",
+      "method": "agent_few_shot",
+      "auc": 0.5,
+      "recovery_rate": 0.0,
+      "detection": {
+        "precision": 0.0,
+        "recall": 1.0,
+        "f1": 0.0,
+        "per_type": {
+          "leakage": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "missing": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 10,
+            "fn": 0
+          },
+          "label_noise": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "near_duplicate": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          },
+          "class_imbalance": {
+            "precision": 0.0,
+            "recall": 1.0,
+            "f1": 0.0,
+            "tp": 0,
+            "fp": 1,
+            "fn": 0
+          },
+          "format_inconsistency": {
+            "precision": 1.0,
+            "recall": 1.0,
+            "f1": 1.0,
+            "tp": 0,
+            "fp": 0,
+            "fn": 0
+          }
+        }
+      },
+      "extra": {
+        "log": [
+          "[run_agent] 数据集 Marketing：8993 行 x 14 列；config(planner=True, reviewer=True, prompt=few_shot, model=deepseek-chat)。",
+          "[run_agent] 画像：缺失列 10，重复行 668，疑似泄漏 []，不平衡比 2.616。",
+          "[planner] 生成 6 步清洗计划。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 2 对。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 1 轮：needs_revision=True。",
+          "[executor] 填补缺失列：['Marital', 'Education', 'Occupation', 'Live', 'Person', 'Person under 18', 'Householder', 'Hometype', 'Ethnic', 'Language']",
+          "[executor] 去重：8993 -> 7127 行，报告 0 对。",
+          "[executor] 报告：检测到类别不平衡。",
+          "[reviewer] 第 2 轮：needs_revision=True。",
+          "[reviewer] 已达最大审视轮数，停止修订。",
+          "[reporter] 清洗后数据落盘：F:\\agraduate\\second\\数据挖掘\\project\\data-mining-coursework\\data\\processed\\Marketing_agent.csv（7127 行 x 14 列）。"
         ]
       }
     }

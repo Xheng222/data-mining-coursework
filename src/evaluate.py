@@ -21,6 +21,25 @@ from xgboost import XGBClassifier
 from src.contracts import DEFECT_TYPES, DefectReport, DetectionScore
 
 
+def _label_encode_object_columns(
+    x_train: pd.DataFrame, x_test: pd.DataFrame
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """对 object/string 列做标签编码，使 tree-based 模型能利用类别信息。
+
+    缺失值或训练集未出现的类别统一编码为 -1（XGBoost 视为缺失）。
+    """
+    x_train = x_train.copy()
+    x_test = x_test.copy()
+    for col in x_train.columns:
+        if x_train[col].dtype == object or x_train[col].dtype.name == "category":
+            # 以训练集类别构建编码映射
+            cats = x_train[col].astype("category").cat.categories
+            cat_to_code = {c: i for i, c in enumerate(cats)}
+            x_train[col] = x_train[col].map(cat_to_code).fillna(-1).astype(int)
+            x_test[col] = x_test[col].map(cat_to_code).fillna(-1).astype(int)
+    return x_train, x_test
+
+
 def train_and_auc(
     train: pd.DataFrame,
     test: pd.DataFrame,
@@ -31,8 +50,8 @@ def train_and_auc(
     设计要点：
     - 特征列取自 train（去掉 target 列）；test 用 ``reindex(columns=特征列)`` 对齐，
       test 缺的列填 NaN、多余列丢弃。这模拟「训练期出现的泄漏特征在测试期不可得」。
-    - 逐列 ``pd.to_numeric(errors="coerce")`` 做最小数值化（非数值→NaN），不做插补，
-      XGBoost 原生支持 NaN。这只是让模型能跑，不等于清洗。
+    - 数值列用 ``pd.to_numeric(errors="coerce")`` 做最小数值化（非数值→NaN），
+      XGBoost 原生支持 NaN。字符串列用标签编码转为整数，缺失值编码为 -1。
     - 二分类用正类概率、多分类用 ``multi_class="ovr"`` 计算 AUC。
     - 边界情况（test 中标签只有单一类别、无法计算 AUC 等）返回 0.5（随机水平）。
 
@@ -42,6 +61,9 @@ def train_and_auc(
 
     x_train = train[feature_cols].apply(pd.to_numeric, errors="coerce")
     x_test = test.reindex(columns=feature_cols).apply(pd.to_numeric, errors="coerce")
+
+    # 对 pd.to_numeric 未能处理的 object 列做标签编码
+    x_train, x_test = _label_encode_object_columns(x_train, x_test)
 
     y_train = train[target_col]
     y_test = test[target_col]

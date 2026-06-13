@@ -39,6 +39,55 @@ CLEANML_TARGET_COLS: dict[str, str] = {
     "Marketing": "Income",
 }
 
+# 内部子目录映射：对外名称 → 实际数据子目录（用于使用 _major 标签噪声变体）
+_CLEANML_SRC_MAP: dict[str, str] = {
+    "Credit": "Credit_major",
+    "EEG": "EEG_major",
+    "Marketing": "Marketing",
+}
+
+
+def _load_major_variant(name: str, src_dir: Path, target_col: str, seed: int) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """加载 _major 标签噪声变体（dirty=raw.csv, clean=mislabel_clean_raw.csv）。
+
+    _major 变体不提供预定义的 train/test 切分，需要在这里创建。
+
+    返回 (dirty_train, clean_train, clean_test)。
+    """
+    dirty_full = pd.read_csv(src_dir / "raw.csv")
+    clean_full = pd.read_csv(src_dir / "mislabel_clean_raw.csv")
+
+    # 先切分 clean data
+    clean_train, clean_test = train_test_split(
+        clean_full, test_size=0.2, random_state=seed
+    )
+
+    # dirty 用同样的行索引（dirty 与 clean 行数一致且按行对齐）
+    dirty_train = dirty_full.iloc[clean_train.index].reset_index(drop=True)
+    clean_train = clean_train.reset_index(drop=True)
+    clean_test = clean_test.reset_index(drop=True)
+
+    return dirty_train, clean_train, clean_test
+
+
+def _load_marketing(src_dir: Path, target_col: str, seed: int) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    """加载 Marketing（orgin.csv = 脏, raw.csv = 净）。
+
+    train/test 按 80/20 随机切分。
+    """
+    dirty_full = pd.read_csv(src_dir / "orgin.csv")
+    clean_full = pd.read_csv(src_dir / "raw.csv")
+
+    # dirty 与 clean 行数一致且按行对齐
+    clean_train, clean_test = train_test_split(
+        clean_full, test_size=0.2, random_state=seed
+    )
+    dirty_train = dirty_full.iloc[clean_train.index].reset_index(drop=True)
+    clean_train = clean_train.reset_index(drop=True)
+    clean_test = clean_test.reset_index(drop=True)
+
+    return dirty_train, clean_train, clean_test
+
 
 def load_cleanml(name: str, out_dir: str = "data/synthetic", seed: int = 42) -> DatasetBundle:
     """加载一个 CleanML 数据集并写入统一的目录结构。
@@ -51,7 +100,7 @@ def load_cleanml(name: str, out_dir: str = "data/synthetic", seed: int = 42) -> 
         输出根目录（默认为 data/synthetic），其下会创建 ``{name}/``
         子目录存放 dirty_train / clean_train / clean_test / ground_truth。
     seed : int
-        用于 Marketing 数据集 train/test 切分的随机种子。
+        用于 train/test 切分的随机种子。
 
     返回
     -------
@@ -63,28 +112,14 @@ def load_cleanml(name: str, out_dir: str = "data/synthetic", seed: int = 42) -> 
         raise ValueError(msg)
 
     target_col = CLEANML_TARGET_COLS[name]
-    src_dir = _CLEANML_ROOT / name / "raw"
+    src_subdir = _CLEANML_SRC_MAP[name]
+    src_dir = _CLEANML_ROOT / src_subdir / "raw"
 
-    # ---- 读取干净 ground truth ----
-    clean_full: pd.DataFrame = pd.read_csv(src_dir / "raw.csv")
-
-    # ---- 根据数据集类型选择 dirty / split 策略 ----
+    # ---- 根据数据集选择加载策略 ----
     if name in ("Credit", "EEG"):
-        # 有预定义的 train/test 切分
-        dirty_train = pd.read_csv(src_dir / "dirty_train.csv")
-        idx_train = pd.read_csv(src_dir / "idx_train.csv")
-        idx_test = pd.read_csv(src_dir / "idx_test.csv")
-
-        # 用 idx 文件从 clean_full 中取出对应的子集
-        clean_train = clean_full.iloc[idx_train.iloc[:, 0]].reset_index(drop=True)
-        clean_test = clean_full.iloc[idx_test.iloc[:, 0]].reset_index(drop=True)
-
+        dirty_train, clean_train, clean_test = _load_major_variant(name, src_dir, target_col, seed)
     elif name == "Marketing":
-        # 无预定义切分；orgin.csv 即为脏版本
-        dirty_train = pd.read_csv(src_dir / "orgin.csv")
-        clean_train, clean_test = train_test_split(
-            clean_full, test_size=0.2, random_state=seed
-        )
+        dirty_train, clean_train, clean_test = _load_marketing(src_dir, target_col, seed)
 
     # ---- 统一目标列名为 TARGET_COL ----
     rename_map = {target_col: TARGET_COL}
@@ -107,6 +142,6 @@ def load_cleanml(name: str, out_dir: str = "data/synthetic", seed: int = 42) -> 
         dataset_id=name,
         difficulty="real",
         root=dataset_dir,
-        n_rows=len(clean_full),
-        n_features=len(clean_full.columns) - 1,
+        n_rows=len(clean_train) + len(clean_test),
+        n_features=len(clean_train.columns) - 1,
     )
