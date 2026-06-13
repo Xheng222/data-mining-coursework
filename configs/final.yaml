@@ -16,6 +16,24 @@ datasets:
   - id: Marketing
     source: cleanml
 
+  # --- 真实基座 + 受控缺陷（共 4 个）---
+  - id: breast_cancer
+    source: real_base
+    difficulty: easy
+    seed: 42
+  - id: digits
+    source: real_base
+    difficulty: easy
+    seed: 42
+  - id: wine
+    source: real_base
+    difficulty: easy
+    seed: 42
+  - id: pima_diabetes
+    source: real_base
+    difficulty: easy
+    seed: 42
+
 base:
   n_rows: 10000
   n_features: 30
