@@ -124,19 +124,28 @@ def _extract_json(text: str) -> dict[str, Any] | None:
 def _heuristic_decision(profile: dict[str, Any]) -> dict[str, Any]:
     """完全基于确定性画像的缺陷判定，作为 LLM 失败时的退化路径。"""
     leakage = list(profile.get("high_corr_cols", []))
-    # |r| 极高也算泄漏
     for col, r in profile.get("target_corr", {}).items():
         if r >= 0.98 and col not in leakage:
             leakage.append(col)
     missing = list(profile.get("missing_frac", {}).keys())
+
+    # 合并精确重复对与基于距离的近邻重复对
     dup_pairs = list(profile.get("duplicate_pairs", []))
+    near_dup = list(profile.get("near_duplicate_pairs", []))
+    merged_pairs = dup_pairs + [p for p in near_dup if p not in dup_pairs]
+
     imbalance = float(profile.get("imbalance_ratio", 1.0)) > 3.0
     fmt = list(profile.get("format_suspect_cols", []))
+
+    # 标签噪声信号：从 CV 残差画像中读取
+    noise_signal = profile.get("label_noise_signal", {})
+    label_noise = bool(noise_signal.get("suspected", False))
+
     return {
         "leakage_cols": leakage,
         "missing_cols": missing,
-        "duplicate_pairs": dup_pairs,
-        "label_noise": False,  # 仅凭画像难判，保守不报
+        "duplicate_pairs": merged_pairs,
+        "label_noise": label_noise,
         "class_imbalance": imbalance,
         "format_inconsistency_cols": fmt,
     }
