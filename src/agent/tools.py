@@ -11,6 +11,9 @@ from typing import Any
 
 import numpy as np
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import StandardScaler
 
 from src.contracts import TARGET_COL, normalize_pair
 
@@ -36,6 +39,8 @@ def profile_data(df: pd.DataFrame, target_col: str = TARGET_COL) -> dict[str, An
       - imbalance_ratio：多数类 / 少数类
       - object_cols：object/类别型列（可能存在格式不一致）
       - format_suspect_cols：值里混入空白/大小写/别名等格式不一致迹象的列
+      - label_noise_signal：基于 CV 残差的标签噪声疑似信号
+      - near_duplicate_pairs：基于数值特征距离的近似重复对（超越精确匹配）
     """
     prof: dict[str, Any] = {}
     prof["n_rows"] = int(len(df))
@@ -97,6 +102,12 @@ def profile_data(df: pd.DataFrame, target_col: str = TARGET_COL) -> dict[str, An
     prof["object_cols"] = object_cols
     prof["format_suspect_cols"] = [c for c in object_cols if _looks_format_inconsistent(df[c])]
 
+    # 标签噪声信号：CV 残差
+    prof["label_noise_signal"] = _cv_label_noise_signal(df, target_col)
+
+    # 近似重复：基于距离的检测（超越精确匹配）
+    prof["near_duplicate_pairs"] = _near_duplicate_by_distance(df, target_col, max_pairs=50)
+
     return prof
 
 
@@ -139,6 +150,160 @@ def _looks_format_inconsistent(s: pd.Series) -> bool:
     if stripped.str.lower().nunique() < stripped.nunique():
         return True
     return False
+
+
+# --------------------------------------------------------------------------- #
+# 标签噪声信号：基于交叉验证残差
+# --------------------------------------------------------------------------- #
+
+def _cv_label_noise_signal(df: pd.DataFrame, target_col: str = TARGET_COL) -> dict[str, Any]:
+    """用 LogisticRegression + 5-fold CV 检测疑似标签噪声。
+
+    对每折计算预测概率与真实标签的绝对残差，取全样本残差平均值。
+    若 top-5% 残差均值远超整体均值（>3 倍），则认为存在标签噪声。
+
+    返回
+    ----
+    dict:
+        - suspected : bool, 是否疑似存在标签噪声
+        - mean_residual : float, 全体样本平均绝对残差
+        - top5_residual : float, 残差最大的 5% 样本的平均残差
+        - ratio : float, top5_residual / mean_residual
+    """
+    result: dict[str, Any] = {"suspected": False, "mean_residual": 0.0, "top5_residual": 0.0, "ratio": 1.0}
+
+    if target_col not in df.columns:
+        return result
+
+    # 只取数值特征
+    feat_cols = [c for c in df.columns if c != target_col and pd.api.types.is_numeric_dtype(df[c])]
+    if len(feat_cols) < 2:
+        return result
+
+    x = df[feat_cols].apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)
+    y = pd.to_numeric(df[target_col], errors="coerce").to_numpy(dtype=float)
+
+    # 去掉含 NaN 的行
+    valid = ~(np.isnan(x).any(axis=1) | np.isnan(y))
+    if valid.sum() < 10:
+        return result
+    x, y = x[valid], y[valid]
+
+    if len(np.unique(y)) < 2:
+        return result
+
+    # 5-fold CV 残差
+    from sklearn.model_selection import StratifiedKFold
+
+    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    residuals = np.full(len(y), np.nan)
+
+    for train_idx, val_idx in skf.split(x, y):
+        try:
+            scaler = StandardScaler()
+            x_train = scaler.fit_transform(x[train_idx])
+            x_val = scaler.transform(x[val_idx])
+
+            model = LogisticRegression(max_iter=500, random_state=42)
+            model.fit(x_train, y[train_idx])
+            prob = model.predict_proba(x_val)[:, 1]
+            residuals[val_idx] = np.abs(y[val_idx] - prob)
+        except Exception:
+            continue
+
+    valid_residuals = residuals[~np.isnan(residuals)]
+    if len(valid_residuals) < 10:
+        return result
+
+    mean_res = float(np.mean(valid_residuals))
+    top5_threshold = float(np.percentile(valid_residuals, 95))
+    top5_res = float(valid_residuals[valid_residuals >= top5_threshold].mean()) if (valid_residuals >= top5_threshold).any() else mean_res
+    ratio = top5_res / mean_res if mean_res > 1e-9 else 1.0
+
+    result["mean_residual"] = round(mean_res, 4)
+    result["top5_residual"] = round(top5_res, 4)
+    result["ratio"] = round(ratio, 3)
+    # 若 top-5% 残差均值远超整体均值，且平均残差非极小，认为存在疑似标签噪声
+    result["suspected"] = (ratio > 2.0 and mean_res > 0.08) or ratio > 3.0
+
+    return result
+
+
+# --------------------------------------------------------------------------- #
+# 近似重复：基于数值特征距离的检测
+# --------------------------------------------------------------------------- #
+
+def _near_duplicate_by_distance(
+    df: pd.DataFrame, target_col: str = TARGET_COL, max_pairs: int = 50
+) -> list[str]:
+    """用最近邻距离检测数值特征上的近似重复行。
+
+    对标准化后的数值特征做 NearestNeighbors，找出距离 < 自适应阈值的行对，
+    排除已由 ``_duplicate_pairs`` 覆盖的精确重复。
+
+    返回
+    ----
+    list[str]
+        规范化样本对 "i-j" (i<j)，最多 max_pairs 对。
+    """
+    feat_cols = [c for c in df.columns if c != target_col and pd.api.types.is_numeric_dtype(df[c])]
+    if len(feat_cols) < 2:
+        return []
+
+    x = df[feat_cols].apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)
+    valid = ~np.isnan(x).any(axis=1)
+    if valid.sum() < 5:
+        return []
+
+    x_clean = x[valid]
+    scaler = StandardScaler()
+    x_scaled = scaler.fit_transform(x_clean)
+
+    nn = NearestNeighbors(n_neighbors=min(3, len(x_scaled)), metric="euclidean")
+    nn.fit(x_scaled)
+    distances, indices = nn.kneighbors(x_scaled)
+
+    # 自适应阈值：第二近邻距离（排除自身第一近邻）的 10 分位
+    second_dist = distances[:, 1]
+    threshold = float(np.percentile(second_dist, 10)) * 1.5
+
+    # 同时设置绝对阈值上限（避免大距离被误判）
+    threshold = min(threshold, 0.5)
+
+    pairs: list[str] = []
+    seen: set[tuple[int, int]] = set()
+
+    # 已有精确重复，跳过它们
+    exact_dup_set: set[tuple[int, int]] = set()
+    for p in _duplicate_pairs(df, max_pairs=1000):
+        try:
+            a, b = p.split("-", 1)
+            exact_dup_set.add((int(a), int(b)))
+        except Exception:
+            pass
+
+    valid_indices = np.where(valid)[0]
+
+    n_neighbors = distances.shape[1]
+    for i in range(len(x_scaled)):
+        for k in range(1, n_neighbors):
+            if distances[i, k] >= threshold:
+                continue
+            j = int(indices[i, k])
+            if j <= i:
+                continue
+            a, b = int(valid_indices[i]), int(valid_indices[j])
+            if a == b:
+                continue
+            key = (a, b) if a < b else (b, a)
+            if key in seen or key in exact_dup_set:
+                continue
+            seen.add(key)
+            pairs.append(normalize_pair(a, b))
+            if len(pairs) >= max_pairs:
+                return pairs
+
+    return pairs
 
 
 # --------------------------------------------------------------------------- #

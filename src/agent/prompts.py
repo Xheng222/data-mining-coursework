@@ -57,6 +57,8 @@ def _profile_brief(profile: dict[str, Any]) -> str:
         "imbalance_ratio": profile.get("imbalance_ratio"),
         "object_cols": profile.get("object_cols"),
         "format_suspect_cols": profile.get("format_suspect_cols"),
+        "label_noise_signal": profile.get("label_noise_signal"),
+        "n_near_duplicate_pairs": len(profile.get("near_duplicate_pairs", [])),
     }
     return json.dumps(brief, ensure_ascii=False)
 
@@ -120,8 +122,8 @@ def executor_prompt(
         "判定要点：\n"
         "- leakage（数据泄漏）：与 target 近乎完全相关（|r|≈1）或语义上由标签派生的列。\n"
         "- missing（缺失）：missing_frac 中出现的列。\n"
-        "- near_duplicate（近似重复）：画像里的 duplicate_pairs。\n"
-        "- label_noise（标签噪声）：标签可能被翻转/污染（画像难直接看出时凭经验判断）。\n"
+        "- near_duplicate（近似重复）：画像里的 duplicate_pairs（精确匹配）与 n_near_duplicate_pairs（基于距离的近邻，可捕获带噪声的近似重复）。\n"
+        "- label_noise（标签噪声）：label_noise_signal.suspected=true 表示 CV 残差分析发现异常高的预测偏差，提示可能存在标签翻转。\n"
         "- class_imbalance（类别不平衡）：imbalance_ratio 明显偏大（如 >3）。\n"
         "- format_inconsistency（格式不一致）：format_suspect_cols 中的列。\n\n"
         f"任务：{task}{plan_part}{feedback_part}\n"
@@ -133,9 +135,10 @@ def executor_prompt(
         few_shot_example=(
             '输入: {"high_corr_cols":["leak"],"target_corr":{"leak":0.99,"f1":0.3},'
             '"missing_frac":{"f2":0.15},"imbalance_ratio":5.0,"format_suspect_cols":["city"],'
-            '"n_duplicate_pairs":2}\n'
-            '输出: {"leakage_cols":["leak"],"missing_cols":["f2"],"duplicate_pairs":[],'
-            '"label_noise":false,"class_imbalance":true,"format_inconsistency_cols":["city"]}'
+            '"n_duplicate_pairs":2,"n_near_duplicate_pairs":5,'
+            '"label_noise_signal":{"suspected":true,"ratio":3.2,"mean_residual":0.15,"top5_residual":0.48}}\n'
+            '输出: {"leakage_cols":["leak"],"missing_cols":["f2"],"duplicate_pairs":["5-105","12-112"],'
+            '"label_noise":true,"class_imbalance":true,"format_inconsistency_cols":["city"]}'
         ),
     )
 
