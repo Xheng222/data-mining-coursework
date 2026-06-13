@@ -50,8 +50,8 @@ def train_and_auc(
     设计要点：
     - 特征列取自 train（去掉 target 列）；test 用 ``reindex(columns=特征列)`` 对齐，
       test 缺的列填 NaN、多余列丢弃。这模拟「训练期出现的泄漏特征在测试期不可得」。
-    - 数值列用 ``pd.to_numeric(errors="coerce")`` 做最小数值化（非数值→NaN），
-      XGBoost 原生支持 NaN。字符串列用标签编码转为整数，缺失值编码为 -1。
+    - 先对字符串列做标签编码，再对剩余列做 ``pd.to_numeric(errors="coerce")``，
+      XGBoost 原生支持 NaN。缺失值编码为 -1。
     - 二分类用正类概率、多分类用 ``multi_class="ovr"`` 计算 AUC。
     - 边界情况（test 中标签只有单一类别、无法计算 AUC 等）返回 0.5（随机水平）。
 
@@ -59,11 +59,14 @@ def train_and_auc(
     """
     feature_cols = [c for c in train.columns if c != target_col]
 
-    x_train = train[feature_cols].apply(pd.to_numeric, errors="coerce")
-    x_test = test.reindex(columns=feature_cols).apply(pd.to_numeric, errors="coerce")
-
-    # 对 pd.to_numeric 未能处理的 object 列做标签编码
+    # 先对 object/string 列做标签编码（在 to_numeric 之前，否则字符串会被转为 NaN 丢失信息）
+    x_train = train[feature_cols].copy()
+    x_test = test.reindex(columns=feature_cols).copy()
     x_train, x_test = _label_encode_object_columns(x_train, x_test)
+
+    # 再对剩余列做最小数值化（非数值→NaN），XGBoost 原生支持 NaN
+    x_train = x_train.apply(pd.to_numeric, errors="coerce")
+    x_test = x_test.apply(pd.to_numeric, errors="coerce")
 
     y_train = train[target_col]
     y_test = test[target_col]
