@@ -1,0 +1,45 @@
+out_dir: results
+methods:
+  - no_clean
+  - rule_based
+  - agent
+ablations:
+  - name: agent_full
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: cot
+  - name: agent_no_reviewer
+    use_planner: true
+    use_reviewer: false
+    prompt_strategy: cot
+  - name: agent_no_planner
+    use_planner: false
+    use_reviewer: true
+    prompt_strategy: cot
+  - name: agent_zero_shot
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: zero_shot
+  - name: agent_few_shot
+    use_planner: true
+    use_reviewer: true
+    prompt_strategy: few_shot
+model: deepseek-chat
+quick: true
+datasets:
+  - id: breast_cancer
+    source: real_base
+    difficulty: easy
+    seed: 42
+  - id: digits
+    source: real_base
+    difficulty: easy
+    seed: 42
+  - id: wine
+    source: real_base
+    difficulty: easy
+    seed: 42
+  - id: pima_diabetes
+    source: real_base
+    difficulty: easy
+    seed: 42
