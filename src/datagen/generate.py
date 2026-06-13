@@ -77,16 +77,23 @@ def generate_dataset(
     out_dir: str | Path = "data/synthetic",
     n_rows: int = 10000,
     n_features: int = 30,
+    base_df: pd.DataFrame | None = None,
 ) -> DatasetBundle:
     """生成一个带已知缺陷的合成分类数据集，落盘并返回 :class:`DatasetBundle`。
 
     流程
     ----
-    1. ``make_base`` 造干净基座。
+    1. 若提供 ``base_df`` 则直接使用（真实数据基座），否则 ``make_base`` 造干净基座。
     2. 分层 ``train_test_split``（test_size=0.2）切出冻结干净测试集与干净训练集。
     3. 干净训练集复制两份：一份原样存为 ``clean_train.csv``；另一份依次注入六类缺陷。
     4. 注入强度由 ``difficulty`` 预设决定。
     5. 落盘 4 个 CSV + ``ground_truth.json`` + ``meta.json``。
+
+    Parameters
+    ----------
+    base_df : pd.DataFrame, optional
+        外部提供的干净基座 DataFrame（必须含 ``target`` 列），
+        用于真实数据基座场景；不传则用 ``make_base`` 生成合成基座。
 
     Returns
     -------
@@ -99,8 +106,11 @@ def generate_dataset(
         )
     preset = DIFFICULTY_PRESETS[difficulty]
 
-    # 1. 干净基座
-    base = make_base(n_rows=n_rows, n_features=n_features, seed=seed)
+    # 1. 干净基座：真实数据 or 合成
+    if base_df is not None:
+        base = base_df.copy()
+    else:
+        base = make_base(n_rows=n_rows, n_features=n_features, seed=seed)
 
     # 2. 分层切出冻结的干净测试集与干净训练集
     train_clean, test_clean = train_test_split(
