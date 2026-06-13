@@ -55,7 +55,10 @@ DEFECT_TYPES = (
     "format_inconsistency",
 )
 
-DIFFICULTIES = ("easy", "medium", "hard")
+DIFFICULTIES = ("easy", "medium", "hard", "real")
+
+# CleanML 真实数据集（脏/净配对表格分类任务）
+CLEANML_DATASETS = ("Credit", "EEG", "Marketing")
 
 # DatasetBundle 落盘文件名（固定，跨模块约定）
 F_DIRTY_TRAIN = "dirty_train.csv"   # 注入缺陷后的训练集（X + target）

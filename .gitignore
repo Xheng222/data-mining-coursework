@@ -209,6 +209,12 @@ __marimo__/
 # 临时文档目录（不入库）
 usr/
 
+# 结果备份目录（不含示例结果选择不慎）
+results copy*/
+
+# CleanML 原始数据（第三方数据集，重可下载，不入库）
+data/CleanML/
+
 # 可由 src.run_experiments 重新生成的数据（不入库，保留 .gitkeep 占位）
 data/synthetic/*/
 data/processed/*.csv

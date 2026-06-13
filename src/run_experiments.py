@@ -36,13 +36,14 @@ from src import viz
 from src.agent import AgentConfig, run_agent
 from src.baseline import run_clean_upper, run_no_clean, run_rule_based
 from src.contracts import (
+    CLEANML_DATASETS,
     TARGET_COL,
     DatasetBundle,
     DetectionScore,
     MethodOutcome,
     recovery_rate,
 )
-from src.datagen import generate_dataset
+from src.datagen import generate_dataset, load_cleanml
 from src.evaluate import detection_scores, load_ground_truth, train_and_auc
 
 # quick 冒烟模式下的小规模覆盖参数。
@@ -144,25 +145,35 @@ def run_dataset(
 ) -> list[MethodOutcome]:
     """跑通单个数据集上的全部方法，返回该数据集的所有 MethodOutcome。"""
     dataset_id = spec["id"]
-    difficulty = spec.get("difficulty", "medium")
-    seed = int(spec.get("seed", 42))
+    source = spec.get("source", "synthetic")
 
-    n_rows = _QUICK_N_ROWS if quick else int(base.get("n_rows", 10000))
-    n_features = _QUICK_N_FEATURES if quick else int(base.get("n_features", 30))
+    if source == "cleanml":
+        data_root = out_dir.parent / "data" / "synthetic"
+        print(f"\n=== 数据集 {dataset_id} (source=CleanML) ===")
+        print(f"[load] 加载 CleanML 数据集到 {data_root / dataset_id} ...")
+        bundle: DatasetBundle = load_cleanml(dataset_id, out_dir=str(data_root))
+    else:
+        difficulty = spec.get("difficulty", "medium")
+        seed = int(spec.get("seed", 42))
 
-    data_root = out_dir.parent / "data" / "synthetic"
+        n_rows = _QUICK_N_ROWS if quick else int(base.get("n_rows", 10000))
+        n_features = _QUICK_N_FEATURES if quick else int(base.get("n_features", 30))
 
-    print(f"\n=== 数据集 {dataset_id} (difficulty={difficulty}, seed={seed}, "
-          f"n_rows={n_rows}, n_features={n_features}) ===")
-    print(f"[gen] 生成合成数据到 {data_root / dataset_id} ...")
-    bundle: DatasetBundle = generate_dataset(
-        dataset_id,
-        difficulty=difficulty,
-        seed=seed,
-        out_dir=str(data_root),
-        n_rows=n_rows,
-        n_features=n_features,
-    )
+        data_root = out_dir.parent / "data" / "synthetic"
+
+        print(f"\n=== 数据集 {dataset_id} (difficulty={difficulty}, seed={seed}, "
+              f"n_rows={n_rows}, n_features={n_features}) ===")
+        print(f"[gen] 生成合成数据到 {data_root / dataset_id} ...")
+        bundle = generate_dataset(
+            dataset_id,
+            difficulty=difficulty,
+            seed=seed,
+            out_dir=str(data_root),
+            n_rows=n_rows,
+            n_features=n_features,
+        )
+
+    is_cleanml = dataset_id in CLEANML_DATASETS
     dataset_root = bundle.root
 
     outcomes: list[MethodOutcome] = []
