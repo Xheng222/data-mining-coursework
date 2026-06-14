@@ -16,6 +16,17 @@ datasets:
   - id: Marketing
     source: cleanml
 
+  # --- CleanML 干净基座 + 受控缺陷（共 2 个）---
+  # Marketing_base 跳过：含非数值列，不兼容缺陷注入流程
+  - id: Credit_base
+    source: cleanml_base
+    difficulty: easy
+    seed: 42
+  - id: EEG_base
+    source: cleanml_base
+    difficulty: easy
+    seed: 42
+
   # --- 真实基座 + 受控缺陷（共 4 个）---
   - id: breast_cancer
     source: real_base

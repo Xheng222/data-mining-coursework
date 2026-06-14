@@ -43,7 +43,7 @@ from src.contracts import (
     MethodOutcome,
     recovery_rate,
 )
-from src.datagen import generate_dataset, load_cleanml, load_real_dataset
+from src.datagen import generate_dataset, load_cleanml, load_cleanml_clean, load_real_dataset
 from src.evaluate import detection_scores, load_ground_truth, train_and_auc
 
 # quick 冒烟模式下的小规模覆盖参数。
@@ -152,6 +152,21 @@ def run_dataset(
         print(f"\n=== 数据集 {dataset_id} (source=CleanML) ===")
         print(f"[load] 加载 CleanML 数据集到 {data_root / dataset_id} ...")
         bundle: DatasetBundle = load_cleanml(dataset_id, out_dir=str(data_root))
+    elif source == "cleanml_base":
+        data_root = out_dir.parent / "data" / "synthetic"
+        difficulty = spec.get("difficulty", "easy")
+        # 从 dataset_id 中去掉 _base 后缀得到原始 CleanML 名称
+        cleanml_name = dataset_id.replace("_base", "")
+        print(f"\n=== 数据集 {dataset_id} (source=cleanml_base, original={cleanml_name}) ===")
+        print(f"[load] 加载 CleanML 干净基座 {cleanml_name} ...")
+        base_df = load_cleanml_clean(cleanml_name)
+        bundle = generate_dataset(
+            dataset_id,
+            difficulty=difficulty,
+            seed=int(spec.get("seed", 42)),
+            out_dir=str(data_root),
+            base_df=base_df,
+        )
     elif source == "real_base":
         data_root = out_dir.parent / "data" / "synthetic"
         difficulty = spec.get("difficulty", "medium")
