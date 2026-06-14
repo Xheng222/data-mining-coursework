@@ -89,6 +89,41 @@ def _load_marketing(src_dir: Path, target_col: str, seed: int) -> tuple[pd.DataF
     return dirty_train, clean_train, clean_test
 
 
+def load_cleanml_clean(name: str) -> pd.DataFrame:
+    """仅加载 CleanML 数据集的**干净版本**，返回完整 DataFrame。
+
+    与 :func:`load_cleanml` 不同，本函数不切分 train/test、不落盘、
+    不返回 bundle；只将干净 CSV 读入内存，以便后续注入受控缺陷
+    （作为 ``generate_dataset(…, base_df=…)`` 的基座输入）。
+
+    参数
+    ----------
+    name : str
+        数据集名称，须在 CLEANML_TARGET_COLS 中定义。
+
+    返回
+    -------
+    pd.DataFrame
+        未经切分的干净 DataFrame（仍保留原始列名，未重命名为 TARGET_COL）。
+    """
+    if name not in CLEANML_TARGET_COLS:
+        msg = f"未知 CleanML 数据集：{name}，可用：{list(CLEANML_TARGET_COLS)}"
+        raise ValueError(msg)
+
+    target_col = CLEANML_TARGET_COLS[name]
+    src_subdir = _CLEANML_SRC_MAP[name]
+    src_dir = _CLEANML_ROOT / src_subdir / "raw"
+
+    if name in ("Credit", "EEG"):
+        # _major 变体：mislabel_clean_raw.csv 为干净版本（原始文件名中的 clean）
+        clean_full = pd.read_csv(src_dir / "mislabel_clean_raw.csv")
+    elif name == "Marketing":
+        clean_full = pd.read_csv(src_dir / "raw.csv")
+
+    rename_map = {target_col: TARGET_COL}
+    return clean_full.rename(columns=rename_map)
+
+
 def load_cleanml(name: str, out_dir: str = "data/synthetic", seed: int = 42) -> DatasetBundle:
     """加载一个 CleanML 数据集并写入统一的目录结构。
 
