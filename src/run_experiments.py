@@ -85,6 +85,7 @@ def _outcome_summary_row(outcome: MethodOutcome) -> dict[str, Any]:
     return {
         "dataset_id": outcome.dataset_id,
         "method": outcome.method,
+        "model": outcome.model,
         "auc": outcome.auc,
         "recovery_rate": outcome.recovery_rate,
         "detection": _detection_to_dict(outcome.detection),
@@ -98,6 +99,7 @@ def _outcome_results_row(outcome: MethodOutcome) -> dict[str, Any]:
     return {
         "dataset_id": outcome.dataset_id,
         "method": outcome.method,
+        "model": outcome.model,
         "auc": outcome.auc,
         "recovery_rate": outcome.recovery_rate,
         "detection_precision": det.precision if det else None,
@@ -117,6 +119,7 @@ def _detection_by_type_rows(outcome: MethodOutcome) -> list[dict[str, Any]]:
             {
                 "dataset_id": outcome.dataset_id,
                 "method": outcome.method,
+                "model": outcome.model,
                 "defect_type": defect_type,
                 "precision": scores.get("precision"),
                 "recall": scores.get("recall"),
@@ -142,8 +145,18 @@ def run_dataset(
     skip_agent: bool,
     quick: bool,
     out_dir: Path,
+    models: list[str] | None = None,
 ) -> list[MethodOutcome]:
-    """跑通单个数据集上的全部方法，返回该数据集的所有 MethodOutcome。"""
+    """跑通单个数据集上的全部方法，返回该数据集的所有 MethodOutcome。
+
+    Parameters
+    ----------
+    models : list[str], optional
+        下游分类模型列表（如 ``["xgb", "rf", "lr"]``）。默认为 ``["xgb"]``。
+    """
+    if models is None:
+        models = ["xgb"]
+
     dataset_id = spec["id"]
     source = spec.get("source", "synthetic")
 
@@ -206,31 +219,32 @@ def run_dataset(
 
     outcomes: list[MethodOutcome] = []
 
-    # --- 上界 / 下界 / 规则基线 ----------------------------------------- #
-    print("[clean_upper] 干净数据训练（AUC 上界）...")
-    clean_upper = run_clean_upper(dataset_root)
-    clean_upper.dataset_id = clean_upper.dataset_id or dataset_id
-    outcomes.append(clean_upper)
-    print(f"    AUC_clean = {clean_upper.auc:.4f}")
+    # --- 上界 / 下界 / 规则基线（各模型一套）----------------------------- #
+    for m in models:
+        print(f"[clean_upper] 干净数据训练（AUC 上界, model={m}）...")
+        clean_upper = run_clean_upper(dataset_root, model_name=m)
+        clean_upper.dataset_id = clean_upper.dataset_id or dataset_id
+        outcomes.append(clean_upper)
+        print(f"    AUC_clean({m}) = {clean_upper.auc:.4f}")
 
-    print("[no_clean] 脏数据直接训练（AUC 下界）...")
-    no_clean = run_no_clean(dataset_root)
-    no_clean.dataset_id = no_clean.dataset_id or dataset_id
-    outcomes.append(no_clean)
-    print(f"    AUC_dirty = {no_clean.auc:.4f}")
+        print(f"[no_clean] 脏数据直接训练（AUC 下界, model={m}）...")
+        no_clean = run_no_clean(dataset_root, model_name=m)
+        no_clean.dataset_id = no_clean.dataset_id or dataset_id
+        outcomes.append(no_clean)
+        print(f"    AUC_dirty({m}) = {no_clean.auc:.4f}")
 
-    print("[rule_based] 规则清洗 + 训练 + 检测...")
-    rule_based = run_rule_based(dataset_root)
-    rule_based.dataset_id = rule_based.dataset_id or dataset_id
-    outcomes.append(rule_based)
-    print(f"    AUC_rule  = {rule_based.auc:.4f}")
+        print(f"[rule_based] 规则清洗 + 训练 + 检测（model={m}）...")
+        rule_based = run_rule_based(dataset_root, model_name=m)
+        rule_based.dataset_id = rule_based.dataset_id or dataset_id
+        outcomes.append(rule_based)
+        print(f"    AUC_rule({m})  = {rule_based.auc:.4f}")
 
+        rule_based.recovery_rate = recovery_rate(no_clean.auc, rule_based.auc, clean_upper.auc)
+        print(f"    recovery_rate(rule_based, {m}) = {rule_based.recovery_rate:.4f}")
+
+    # 最后一个模型的 auc_clean/dirty 用于 agent 的 Recovery Rate
     auc_dirty = no_clean.auc
     auc_clean = clean_upper.auc
-
-    # rule_based 的 Recovery Rate。
-    rule_based.recovery_rate = recovery_rate(auc_dirty, rule_based.auc, auc_clean)
-    print(f"    recovery_rate(rule_based) = {rule_based.recovery_rate:.4f}")
 
     # --- Agent 消融 ----------------------------------------------------- #
     if skip_agent:
@@ -252,28 +266,34 @@ def run_dataset(
         print(f"[agent:{method_name}] use_planner={config.use_planner} "
               f"use_reviewer={config.use_reviewer} prompt={config.prompt_strategy} ...")
 
-        outcome = MethodOutcome(dataset_id=dataset_id, method=method_name, auc=math.nan)
+        # Agent 的清洗逻辑只用跑一次，各模型共享 detection
         try:
             result = run_agent(dataset_root, task=_AGENT_TASK, config=config)
-
             cleaned_train = _read_csv(result.cleaned_train_path)
-            outcome.auc = train_and_auc(cleaned_train, clean_test, target_col=TARGET_COL)
-            outcome.detection = detection_scores(result.reported_defects, ground_truth)
-            outcome.recovery_rate = recovery_rate(auc_dirty, outcome.auc, auc_clean)
-            outcome.extra = {"log": result.log}
-            print(f"    AUC={outcome.auc:.4f} "
-                  f"recovery_rate={outcome.recovery_rate:.4f} "
-                  f"detection_f1={outcome.detection.f1:.4f}")
-        except Exception as exc:  # noqa: BLE001 - 容错：单个 agent 变体失败不影响整体
+            detection = detection_scores(result.reported_defects, ground_truth)
+            extra = {"log": result.log}
+        except Exception as exc:
             print(f"    [WARN] agent 变体 {method_name} 在 {dataset_id} 上失败：{exc}")
             traceback.print_exc()
-            # auc 置 NaN、detection/recovery 置 None，其余结果照常产出。
-            outcome.auc = math.nan
-            outcome.detection = None
-            outcome.recovery_rate = None
-            outcome.extra = {"error": str(exc)}
+            for m in models:
+                outcomes.append(MethodOutcome(
+                    dataset_id=dataset_id, method=method_name, model=m,
+                    auc=math.nan, detection=None, recovery_rate=None,
+                    extra={"error": str(exc)},
+                ))
+            continue
 
-        outcomes.append(outcome)
+        for m in models:
+            auc = train_and_auc(cleaned_train, clean_test, target_col=TARGET_COL, model_name=m)
+            outcome = MethodOutcome(
+                dataset_id=dataset_id, method=method_name, model=m,
+                auc=auc, detection=detection,
+                recovery_rate=recovery_rate(auc_dirty, auc, auc_clean),
+                extra=extra,
+            )
+            outcomes.append(outcome)
+            print(f"    AUC({m})={auc:.4f} RR={outcome.recovery_rate:.4f} "
+                  f"detection_f1={detection.f1:.4f}")
 
     return outcomes
 
@@ -297,7 +317,7 @@ def write_results(all_outcomes: list[MethodOutcome], out_dir: Path) -> dict[str,
         detection_rows.extend(_detection_by_type_rows(o))
     detection_df = pd.DataFrame(
         detection_rows,
-        columns=["dataset_id", "method", "defect_type", "precision", "recall", "f1"],
+        columns=["dataset_id", "method", "model", "defect_type", "precision", "recall", "f1"],
     )
     detection_path = out_dir / "detection_by_type.csv"
     detection_df.to_csv(detection_path, index=False)
@@ -331,6 +351,7 @@ def make_figures(out_dir: Path) -> list[Path]:
         viz.plot_auc_comparison(results_df, fig_dir / "auc_comparison.png"),
         viz.plot_recovery_rate(results_df, fig_dir / "recovery_rate.png"),
         viz.plot_detection_by_type(detection_df, fig_dir / "detection_by_type.png"),
+        viz.plot_model_comparison(results_df, fig_dir / "model_comparison.png"),
     ]
     for p in paths:
         print(f"[figure] {p}")
@@ -380,13 +401,14 @@ def main() -> None:
     base = cfg.get("base", {})
     ablations = cfg.get("ablations", [])
     model = cfg.get("model", "deepseek-chat")
+    eval_models = cfg.get("eval_models", ["xgb"])
     out_dir = Path(cfg.get("out_dir", "results"))
 
     if args.max_datasets is not None:
         datasets = datasets[: args.max_datasets]
 
     print(f"[config] 数据集={len(datasets)} ablations={len(ablations)} "
-          f"model={model} out_dir={out_dir} "
+          f"model={model} eval_models={eval_models} out_dir={out_dir} "
           f"quick={args.quick} skip_agent={args.skip_agent}")
 
     all_outcomes: list[MethodOutcome] = []
@@ -399,6 +421,7 @@ def main() -> None:
             skip_agent=args.skip_agent,
             quick=args.quick,
             out_dir=out_dir,
+            models=eval_models,
         )
         all_outcomes.extend(outcomes)
 

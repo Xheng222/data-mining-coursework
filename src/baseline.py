@@ -38,25 +38,25 @@ def _read_csv(path: Path) -> pd.DataFrame:
     return pd.read_csv(path)
 
 
-def run_no_clean(dataset_root: str | Path) -> MethodOutcome:
+def run_no_clean(dataset_root: str | Path, model_name: str = "xgb") -> MethodOutcome:
     """脏训练集直接训练，得到性能下界。"""
     root = Path(dataset_root)
     dirty_train = _read_csv(root / F_DIRTY_TRAIN)
     clean_test = _read_csv(root / F_CLEAN_TEST)
-    auc = train_and_auc(dirty_train, clean_test)
-    return MethodOutcome(dataset_id=root.name, method="no_clean", auc=auc)
+    auc = train_and_auc(dirty_train, clean_test, model_name=model_name)
+    return MethodOutcome(dataset_id=root.name, method="no_clean", model=model_name, auc=auc)
 
 
-def run_clean_upper(dataset_root: str | Path) -> MethodOutcome:
+def run_clean_upper(dataset_root: str | Path, model_name: str = "xgb") -> MethodOutcome:
     """干净训练集直接训练，得到性能上界。"""
     root = Path(dataset_root)
     clean_train = _read_csv(root / F_CLEAN_TRAIN)
     clean_test = _read_csv(root / F_CLEAN_TEST)
-    auc = train_and_auc(clean_train, clean_test)
-    return MethodOutcome(dataset_id=root.name, method="clean_upper", auc=auc)
+    auc = train_and_auc(clean_train, clean_test, model_name=model_name)
+    return MethodOutcome(dataset_id=root.name, method="clean_upper", model=model_name, auc=auc)
 
 
-def run_rule_based(dataset_root: str | Path) -> MethodOutcome:
+def run_rule_based(dataset_root: str | Path, model_name: str = "xgb") -> MethodOutcome:
     """规则清洗后训练，并计算缺陷检测指标。
 
     清洗后的 DataFrame 由本函数负责落盘到
@@ -74,7 +74,7 @@ def run_rule_based(dataset_root: str | Path) -> MethodOutcome:
     out_path = _PROCESSED_DIR / f"{dataset_id}_rule.csv"
     cleaned_df.to_csv(out_path, index=False)
 
-    auc = train_and_auc(cleaned_df, clean_test)
+    auc = train_and_auc(cleaned_df, clean_test, model_name=model_name)
     detection = detection_scores(
         result.reported_defects,
         load_ground_truth(root / F_GROUND_TRUTH),
@@ -82,6 +82,7 @@ def run_rule_based(dataset_root: str | Path) -> MethodOutcome:
     return MethodOutcome(
         dataset_id=dataset_id,
         method="rule_based",
+        model=model_name,
         auc=auc,
         detection=detection,
     )
