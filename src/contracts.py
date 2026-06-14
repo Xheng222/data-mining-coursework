@@ -130,6 +130,7 @@ class MethodOutcome:
     dataset_id: str
     method: str                         # "no_clean" | "rule_based" | "agent[...]" | "clean_upper"
     auc: float                          # 在固定干净测试集上的 AUC-ROC
+    model: str = "xgb"                  # 下游分类模型名称：xgb / rf / lr
     detection: Optional[DetectionScore] = None
     recovery_rate: Optional[float] = None
     extra: dict[str, Any] = field(default_factory=dict)

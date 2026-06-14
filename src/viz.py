@@ -36,7 +36,15 @@ def _save(fig: "plt.Figure", out_path: str | Path) -> Path:
     return out_path
 
 
-def plot_auc_comparison(results_df: pd.DataFrame, out_path: str | Path) -> Path:
+def _filter_model(df: pd.DataFrame, model: str | None = "xgb") -> pd.DataFrame:
+    """若 DataFrame 含 ``model`` 列，则按指定模型过滤；否则原样返回。"""
+    if model is not None and "model" in df.columns:
+        return df[df["model"] == model].copy()
+    return df.copy()
+
+
+def plot_auc_comparison(results_df: pd.DataFrame, out_path: str | Path,
+                        model: str | None = "xgb") -> Path:
     """各方法在各数据集上的 AUC 分组柱状图。
 
     x 轴为数据集，每个数据集内并排画出全部方法的 AUC；clean_upper / no_clean
@@ -45,16 +53,16 @@ def plot_auc_comparison(results_df: pd.DataFrame, out_path: str | Path) -> Path:
     Parameters
     ----------
     results_df:
-        含列 ``dataset_id``、``method``、``auc`` 的汇总表。
+        含列 ``dataset_id``、``method``、``auc`` 的汇总表。若有 ``model`` 列则自动过滤。
     out_path:
-        输出 PNG 路径，父目录会自动创建。
-
+        输出 PNG 路径。
+    model:
+        若 DataFrame 含 ``model`` 列，只绘制该模型的结果。设为 ``None`` 显示全部模型。
     Returns
     -------
     pathlib.Path
-        实际写出的文件路径。
     """
-    df = results_df.dropna(subset=["auc"]).copy()
+    df = _filter_model(results_df, model).dropna(subset=["auc"]).copy()
     datasets = sorted(df["dataset_id"].unique())
 
     # 方法排序：上下界放两端，其余按字母序，便于视觉对比。
@@ -91,13 +99,14 @@ def plot_auc_comparison(results_df: pd.DataFrame, out_path: str | Path) -> Path:
     return _save(fig, out_path)
 
 
-def plot_recovery_rate(results_df: pd.DataFrame, out_path: str | Path) -> Path:
+def plot_recovery_rate(results_df: pd.DataFrame, out_path: str | Path,
+                       model: str | None = "xgb") -> Path:
     """rule_based 与各 agent 变体的 Recovery Rate 分组柱状图。
 
     Recovery Rate 把方法 AUC 在 [no_clean, clean_upper] 区间内归一化，1.0 表示
     完全恢复到干净数据水平。上下界方法本身（recovery 恒为 0/1）不参与绘制。
     """
-    df = results_df.dropna(subset=["recovery_rate"]).copy()
+    df = _filter_model(results_df, model).dropna(subset=["recovery_rate"]).copy()
     df = df[~df["method"].isin(_REFERENCE_METHODS)]
 
     datasets = sorted(df["dataset_id"].unique())
@@ -126,6 +135,44 @@ def plot_recovery_rate(results_df: pd.DataFrame, out_path: str | Path) -> Path:
     ax.legend(title="Method", loc="best", fontsize=8)
     ax.grid(axis="y", linestyle="--", alpha=0.4)
 
+    return _save(fig, out_path)
+
+
+def plot_model_comparison(results_df: pd.DataFrame, out_path: str | Path) -> Path:
+    """各模型在各（数据集, 方法）上的 AUC 散点对比图。
+
+    若数据不包含多模型，直接返回占位图。
+    """
+    df = results_df.dropna(subset=["auc"]).copy()
+    if "model" not in df.columns or df["model"].nunique() < 2:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        ax.text(0.5, 0.5, "Single model only – no comparison needed", ha="center", va="center")
+        ax.set_axis_off()
+        return _save(fig, out_path)
+
+    models = sorted(df["model"].unique())
+    # 对每个 (dataset, method) 按模型展开 AUC
+    pivot = df.pivot_table(index=["dataset_id", "method"], columns="model", values="auc")
+    pivot = pivot.dropna()
+
+    fig, axes = plt.subplots(1, len(models) - 1, figsize=(6 * (len(models) - 1), 5),
+                             sharex=False, sharey=True)
+    if len(models) - 1 == 1:
+        axes = [axes]
+
+    ref_model = models[0]
+    for ax, cmp_model in zip(axes, models[1:]):
+        ax.scatter(pivot[ref_model], pivot[cmp_model], alpha=0.6)
+        lims = [min(pivot[[ref_model, cmp_model]].min().min(), 0.4),
+                max(pivot[[ref_model, cmp_model]].max().max(), 1.0)]
+        ax.plot(lims, lims, "r--", alpha=0.4, label="y=x")
+        ax.set_xlabel(f"AUC ({ref_model})")
+        ax.set_ylabel(f"AUC ({cmp_model})")
+        ax.set_title(f"{ref_model} vs {cmp_model}")
+        ax.grid(alpha=0.3)
+        ax.legend()
+
+    fig.suptitle("Model Robustness: AUC Comparison Across Classifiers")
     return _save(fig, out_path)
 
 

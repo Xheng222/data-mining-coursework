@@ -2,8 +2,9 @@
 
 本模块提供两类评测能力：
 
-1. ``train_and_auc``：在（可能很脏的）训练集上训练 XGBoost，并在固定的干净测试集上
-   返回 AUC-ROC。它只做让模型「能跑」所需的最小数值化，不做任何清洗/插补——
+1. ``train_and_auc``：在（可能很脏的）训练集上训练模型，并在固定的干净测试集上
+   返回 AUC-ROC。支持多个下游模型（XGBoost / RandomForest / LogisticRegression）。
+   它只做让模型「能跑」所需的最小数值化，不做任何清洗/插补——
    清洗是 baseline / agent 的职责，这里只负责量化「训练集脏到什么程度会拖垮下游」。
 2. ``detection_scores``：把「被报告的缺陷」与 ground truth 按缺陷类型逐一比对，
    计算 per-type 与整体（micro 平均）的 precision/recall/f1。
@@ -15,6 +16,8 @@ import json
 from pathlib import Path
 
 import pandas as pd
+from sklearn.linear_model import LogisticRegression
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score
 from xgboost import XGBClassifier
 
@@ -40,85 +43,98 @@ def _label_encode_object_columns(
     return x_train, x_test
 
 
-def train_and_auc(
-    train: pd.DataFrame,
-    test: pd.DataFrame,
-    target_col: str = "target",
+def _auc_from_proba(
+    proba, y_test, classes, multi_class: str = "ovr"
 ) -> float:
-    """在 train 上训练 XGBoost，在固定的 test 上返回 AUC-ROC。
+    """统一由 predict_proba 输出计算 AUC-ROC，支持二分类与多分类。"""
+    if len(classes) == 2:
+        pos_label = classes[1]
+        y_true_bin = (y_test == pos_label).astype(int)
+        if y_true_bin.nunique() < 2:
+            return 0.5
+        return float(roc_auc_score(y_true_bin, proba[:, 1]))
+    else:
+        cat_map = {c: i for i, c in enumerate(classes)}
+        y_test_codes = y_test.map(cat_map)
+        if y_test_codes.isna().any() or y_test_codes.nunique() < 2:
+            return 0.5
+        return float(
+            roc_auc_score(
+                y_test_codes, proba, multi_class=multi_class, labels=list(range(len(classes)))
+            )
+        )
 
-    设计要点：
-    - 特征列取自 train（去掉 target 列）；test 用 ``reindex(columns=特征列)`` 对齐，
-      test 缺的列填 NaN、多余列丢弃。这模拟「训练期出现的泄漏特征在测试期不可得」。
-    - 先对字符串列做标签编码，再对剩余列做 ``pd.to_numeric(errors="coerce")``，
-      XGBoost 原生支持 NaN。缺失值编码为 -1。
-    - 二分类用正类概率、多分类用 ``multi_class="ovr"`` 计算 AUC。
-    - 边界情况（test 中标签只有单一类别、无法计算 AUC 等）返回 0.5（随机水平）。
 
-    返回：float 形式的 AUC-ROC。
-    """
+_MODEL_REGISTRY: dict[str, tuple] = {
+    "xgb": (XGBClassifier, {"n_estimators": 200, "max_depth": 4, "learning_rate": 0.1,
+                            "eval_metric": "logloss", "tree_method": "hist",
+                            "random_state": 42, "n_jobs": -1}),
+    "rf": (RandomForestClassifier, {"n_estimators": 200, "max_depth": 4,
+                                     "random_state": 42, "n_jobs": -1}),
+    "lr": (LogisticRegression, {"max_iter": 1000, "random_state": 42}),
+}
+
+
+def _prepare_data(
+    train: pd.DataFrame, test: pd.DataFrame, target_col: str = "target"
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series, list]:
+    """共享的数据预处理：标签编码 → 数值化 → 标签编码，返回 (x_train, x_test, y_train, y_test, classes)。"""
     feature_cols = [c for c in train.columns if c != target_col]
-
-    # 先对 object/string 列做标签编码（在 to_numeric 之前，否则字符串会被转为 NaN 丢失信息）
     x_train = train[feature_cols].copy()
     x_test = test.reindex(columns=feature_cols).copy()
     x_train, x_test = _label_encode_object_columns(x_train, x_test)
-
-    # 再对剩余列做最小数值化（非数值→NaN），XGBoost 原生支持 NaN
     x_train = x_train.apply(pd.to_numeric, errors="coerce")
     x_test = x_test.apply(pd.to_numeric, errors="coerce")
 
     y_train = train[target_col]
     y_test = test[target_col]
 
-    # 训练集本身只有单一类别时无法训练出有意义的分类器。
-    if y_train.nunique(dropna=True) < 2:
-        return 0.5
-    # 测试集只有单一类别时 ROC-AUC 无定义。
-    if y_test.nunique(dropna=True) < 2:
-        return 0.5
+    if y_train.nunique(dropna=True) < 2 or y_test.nunique(dropna=True) < 2:
+        return x_train, x_test, y_train, y_test, []
 
-    model = XGBClassifier(
-        n_estimators=200,
-        max_depth=4,
-        learning_rate=0.1,
-        eval_metric="logloss",
-        tree_method="hist",
-        random_state=42,
-        n_jobs=-1,
-    )
-
-    # XGBClassifier 要求标签为从 0 开始的连续整数；用 category 编码兜底任意标签类型。
     y_train_enc = y_train.astype("category")
     classes = list(y_train_enc.cat.categories)
     y_train_codes = y_train_enc.cat.codes
+    return x_train, x_test, y_train_codes, y_test, classes
 
-    model.fit(x_train, y_train_codes)
 
-    proba = model.predict_proba(x_test)
+def train_and_auc(
+    train: pd.DataFrame,
+    test: pd.DataFrame,
+    target_col: str = "target",
+    model_name: str = "xgb",
+) -> float:
+    """在 train 上训练指定模型，在固定的 test 上返回 AUC-ROC。
+
+    参数
+    ----------
+    model_name : str
+        下游模型名称。可选：``xgb``（XGBoost, 默认）、``rf``（RandomForest）、
+        ``lr``（LogisticRegression）。
+
+    设计要点：
+    - 特征列取自 train（去掉 target 列）；test 用 ``reindex(columns=特征列)`` 对齐，
+      test 缺的列填 NaN、多余列丢弃。这模拟「训练期出现的泄漏特征在测试期不可得」。
+    - 边界情况（test 中标签只有单一类别、无法计算 AUC 等）返回 0.5（随机水平）。
+
+    返回：float 形式的 AUC-ROC。
+    """
+    if model_name not in _MODEL_REGISTRY:
+        msg = f"未知模型：{model_name!r}，可用：{list(_MODEL_REGISTRY)}"
+        raise ValueError(msg)
+
+    x_train, x_test, y_train, y_test, classes = _prepare_data(train, test, target_col)
+    if not classes:
+        return 0.5
+
+    model_cls, params = _MODEL_REGISTRY[model_name]
+    model = model_cls(**params)
 
     try:
-        if len(classes) == 2:
-            # 正类 = 训练集 category 中的第二个类别。
-            pos_label = classes[1]
-            y_true_bin = (y_test == pos_label).astype(int)
-            if y_true_bin.nunique() < 2:
-                return 0.5
-            return float(roc_auc_score(y_true_bin, proba[:, 1]))
-        else:
-            # 多分类：把 test 标签映射到训练编码空间，未见过的类别会导致无法计算。
-            cat_map = {c: i for i, c in enumerate(classes)}
-            y_test_codes = y_test.map(cat_map)
-            if y_test_codes.isna().any() or y_test_codes.nunique() < 2:
-                return 0.5
-            return float(
-                roc_auc_score(
-                    y_test_codes,
-                    proba,
-                    multi_class="ovr",
-                    labels=list(range(len(classes))),
-                )
-            )
+        # XGBClassifier / RandomForestClassifier 期望连续整数标签
+        model.fit(x_train, y_train)
+        proba = model.predict_proba(x_test)
+        return _auc_from_proba(proba, y_test, classes)
     except ValueError:
         return 0.5
 

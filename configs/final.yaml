@@ -50,6 +50,12 @@ base:
   n_features: 30
   test_size: 0.2
 
+# 下游分类模型：xgb（XGBoost）/ rf（RandomForest）/ lr（LogisticRegression）
+eval_models:
+  - xgb
+  - rf
+  - lr
+
 methods:
   - no_clean
   - rule_based
