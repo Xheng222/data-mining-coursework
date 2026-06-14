@@ -93,7 +93,7 @@ def run_agent(
     dirty_path = root / F_DIRTY_TRAIN
     if not dirty_path.exists():
         raise FileNotFoundError(f"未找到脏训练集：{dirty_path}")
-    dirty_df = pd.read_csv(dirty_path)
+    dirty_df = pd.read_csv(dirty_path, encoding="utf-8")
 
     log: list[str] = [
         f"[run_agent] 数据集 {dataset_id}：{len(dirty_df)} 行 x {dirty_df.shape[1]} 列；"
