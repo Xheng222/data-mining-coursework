@@ -134,7 +134,7 @@ def _detection_by_type_rows(outcome: MethodOutcome) -> list[dict[str, Any]]:
 # --------------------------------------------------------------------------- #
 
 def _read_csv(path: str | Path) -> pd.DataFrame:
-    return pd.read_csv(path)
+    return pd.read_csv(path, encoding="utf-8")
 
 
 def run_dataset(
@@ -154,8 +154,7 @@ def run_dataset(
     models : list[str], optional
         下游分类模型列表（如 ``["xgb", "rf", "lr"]``）。默认为 ``["xgb"]``。
     """
-    if models is None:
-        models = ["xgb"]
+    dataset_models = spec.get("models", models if models else ["xgb"])
 
     dataset_id = spec["id"]
     source = spec.get("source", "synthetic")
@@ -220,7 +219,7 @@ def run_dataset(
     outcomes: list[MethodOutcome] = []
 
     # --- 上界 / 下界 / 规则基线（各模型一套）----------------------------- #
-    for m in models:
+    for m in dataset_models:
         print(f"[clean_upper] 干净数据训练（AUC 上界, model={m}）...")
         clean_upper = run_clean_upper(dataset_root, model_name=m)
         clean_upper.dataset_id = clean_upper.dataset_id or dataset_id
@@ -275,7 +274,7 @@ def run_dataset(
         except Exception as exc:
             print(f"    [WARN] agent 变体 {method_name} 在 {dataset_id} 上失败：{exc}")
             traceback.print_exc()
-            for m in models:
+            for m in dataset_models:
                 outcomes.append(MethodOutcome(
                     dataset_id=dataset_id, method=method_name, model=m,
                     auc=math.nan, detection=None, recovery_rate=None,
@@ -283,7 +282,7 @@ def run_dataset(
                 ))
             continue
 
-        for m in models:
+        for m in dataset_models:
             auc = train_and_auc(cleaned_train, clean_test, target_col=TARGET_COL, model_name=m)
             outcome = MethodOutcome(
                 dataset_id=dataset_id, method=method_name, model=m,
@@ -344,8 +343,8 @@ def make_figures(out_dir: Path) -> list[Path]:
     fig_dir = out_dir / "figures"
     fig_dir.mkdir(parents=True, exist_ok=True)
 
-    results_df = pd.read_csv(out_dir / "results.csv")
-    detection_df = pd.read_csv(out_dir / "detection_by_type.csv")
+    results_df = pd.read_csv(out_dir / "results.csv", encoding="utf-8")
+    detection_df = pd.read_csv(out_dir / "detection_by_type.csv", encoding="utf-8")
 
     paths = [
         viz.plot_auc_comparison(results_df, fig_dir / "auc_comparison.png"),

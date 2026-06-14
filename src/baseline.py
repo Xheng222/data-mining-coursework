@@ -35,7 +35,7 @@ _PROCESSED_DIR = Path("data/processed")
 
 def _read_csv(path: Path) -> pd.DataFrame:
     """读取一个数据集 CSV 文件。"""
-    return pd.read_csv(path)
+    return pd.read_csv(path, encoding="utf-8")
 
 
 def run_no_clean(dataset_root: str | Path, model_name: str = "xgb") -> MethodOutcome:

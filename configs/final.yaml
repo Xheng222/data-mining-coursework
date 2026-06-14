@@ -28,10 +28,12 @@ datasets:
     seed: 42
 
   # --- 真实基座 + 受控缺陷（共 4 个）---
+  # breast_cancer 跑全模型，其余只跑 xgb
   - id: breast_cancer
     source: real_base
     difficulty: easy
     seed: 42
+    models: [xgb, rf, lr]
   - id: digits
     source: real_base
     difficulty: easy
@@ -51,10 +53,9 @@ base:
   test_size: 0.2
 
 # 下游分类模型：xgb（XGBoost）/ rf（RandomForest）/ lr（LogisticRegression）
+# 全局默认只跑 xgb；如需在特定数据集上跑多模型，在该数据集的 models 字段中覆盖
 eval_models:
   - xgb
-  - rf
-  - lr
 
 methods:
   - no_clean

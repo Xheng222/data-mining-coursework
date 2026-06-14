@@ -208,6 +208,7 @@ __marimo__/
 
 # 临时文档目录（不入库）
 usr/
+!usr/result.md  # 实验结果说明需入库
 
 # 结果备份目录（不含示例结果选择不慎）
 results copy*/
