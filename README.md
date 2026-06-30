@@ -32,6 +32,7 @@ Agent 通过消融开关派生出 5 个变体：`agent_full`、`agent_no_reviewe
 
 - 开题报告：[reports/开题报告.md](./reports/开题报告.md)
 - 中期进展报告：[reports/中期进展报告.md](./reports/中期进展报告.md)
+- 最终报告：[reports/最终报告.md](./reports/最终报告.md)
 
 ## 环境
 
