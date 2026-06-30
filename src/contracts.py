@@ -143,10 +143,15 @@ class MethodOutcome:
 def recovery_rate(auc_dirty: float, auc_method: float, auc_clean: float) -> float:
     """Recovery Rate = (AUC_method - AUC_dirty) / (AUC_clean - AUC_dirty)。
 
-    三个 AUC 均来自同一个固定干净测试集。分母过小时返回 0.0 以避免数值爆炸。
+    三个 AUC 均来自同一个固定干净测试集。
+
+    返回 0.0 表示该数据集不构成有效评估区间：
+      - 分母过小（``|AUC_clean - AUC_dirty| < 1e-9``）：脏/净几乎无差异，无可恢复空间；
+      - 分母为负（``AUC_clean <= AUC_dirty``）：清洗上界并不优于脏数据，
+        此时 RR 的符号会被反转而失去意义，应视为无效而非给出误导性数值。
     """
     denom = auc_clean - auc_dirty
-    if abs(denom) < 1e-9:
+    if denom < 1e-9:
         return 0.0
     return (auc_method - auc_dirty) / denom
 

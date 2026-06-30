@@ -40,8 +40,7 @@ def _ensure_env() -> None:
     try:
         from dotenv import load_dotenv
 
-        load_dotenv("F:/doc/数据挖掘/data-mining-coursework/.env")
-        load_dotenv()  # fallback：从 cwd 向上找
+        load_dotenv()  # 从 cwd 向上查找项目根的 .env
     except Exception:
         pass
     _ENV_LOADED = True
